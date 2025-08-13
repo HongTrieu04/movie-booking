@@ -1,10 +1,12 @@
 from fastapi import FastAPI
-from routes import movies
+from api.admin import routeAdmin
+from db.database import engine, Base
 
-app = FastAPI(title="Movie Booking API")
-
-app.include_router(movies.router, prefix="/movies", tags=["Movies"])
+Base.metadata.create_all(bind=engine)  
+app = FastAPI()
 
 @app.get("/")
-def root():
-    return {"message": "Welcome to Movie Booking API"}
+def hello():
+    return {"message": "Welcome to my app"}
+
+app.include_router(routeAdmin)
