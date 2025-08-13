@@ -1,0 +1,77 @@
+services:
+  db:
+    image: postgres:16
+    container_name: mb_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-movie_db}
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Tự động import dump khi data volume còn trống (chỉ lần đầu)
+      - ./data/db_dump.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mb_backend
+    env_file:
+      - .env
+    environment:
+      # fallback nếu thiếu .env
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-movie_db}
+      DB_USER: ${POSTGRES_USER:-user}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      # nếu cần CORS riêng:
+      ALLOW_ORIGINS: ${ALLOW_ORIGINS:-*}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mb_frontend
+    depends_on:
+      - backend
+    # FE được phục vụ qua Nginx reverse proxy bên trong image
+    expose:
+      - "80"
+    volumes:
+      # mount ảnh để Nginx phục vụ trực tiếp qua /img/
+      - ./data/img:/usr/share/nginx/html/img:ro
+
+  gateway:
+    image: nginx:1.27-alpine
+    container_name: mb_gateway
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # phục vụ ảnh từ host (nếu bạn muốn gateway phục vụ ảnh thay vì FE container)
+      - ./data/img:/var/www/img:ro
+      # FE build (static) được lấy trực tiếp từ container frontend qua upstream,
+      # nếu bạn muốn gateway host file tĩnh thì thay bằng bind mount build FE vào đây.
+volumes:
+  pgdata:

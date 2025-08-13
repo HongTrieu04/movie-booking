@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routes import movies
+from routes import movies
 
 app = FastAPI(title="Movie Booking API")
 
