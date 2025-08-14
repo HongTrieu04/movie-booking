@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from api.admin import routeAdmin
-from db.database import engine, Base
+from .routes.user import router as user_router
+from app.db.database import engine, Base
 
 Base.metadata.create_all(bind=engine)  
 app = FastAPI()
@@ -9,4 +9,4 @@ app = FastAPI()
 def hello():
     return {"message": "Welcome to my app"}
 
-app.include_router(routeAdmin)
+app.include_router(user_router)
