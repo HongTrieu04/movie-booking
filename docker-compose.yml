@@ -16,12 +16,58 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - app_net
+
+  keycloak-db:
+    image: postgres:16
+    container_name: keycloak_db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - app_net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U keycloak -d keycloak" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: keycloak
+    command: start --hostname-strict=false --import-realm --http-relative-path=/auth
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: localhost
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    volumes:
+      - ./keycloak-realm-movie.json:/opt/keycloak/data/import/realm-movie.json
+    ports:
+      - "8081:8080"
+    networks:
+      - app_net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/auth/realms/master" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: mb_backend
     working_dir: /backend
     env_file:
       - .env
@@ -45,20 +91,23 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/backend   # mount code từ host vào container
+      - ./backend:/backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - app_net
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: mb_frontend
     depends_on:
       - backend
     expose:
       - "80"
     volumes:
       - ./data/img:/usr/share/nginx/html/img:ro
+    networks:
+      - app_net
 
   gateway:
     image: nginx:1.27-alpine
@@ -66,11 +115,19 @@ services:
     depends_on:
       - frontend
       - backend
+      - keycloak
     ports:
       - "${APP_PORT:-8080}:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/img:/var/www/img:ro
+    networks:
+      - app_net
 
 volumes:
+  keycloak_db_data:
   pgdata:
+
+networks:
+  app_net:
+    driver: bridge

@@ -1,0 +1,41 @@
+{
+  "realm": "movie",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "Administrator role" },
+      { "name": "user", "description": "Regular user role" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "movie-frontend",
+      "name": "Movie Frontend (React, PKCE)",
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "http://localhost/*"
+      ],
+      "webOrigins": [
+        "http://localhost"
+      ]
+    },
+    {
+      "clientId": "movie-api",
+      "name": "Movie API (FastAPI, bearer-only)",
+      "publicClient": false,
+      "bearerOnly": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    }
+  ]
+}
