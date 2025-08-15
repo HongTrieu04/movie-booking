@@ -5,8 +5,7 @@ class UserBase(BaseModel):
     name: str
     email: EmailStr
     phone: Optional[str] = None
-    role: Optional[str] = "customer"
-
+    
 class UserCreate(UserBase):
     password: str
 
@@ -18,7 +17,23 @@ class UserUpdate(BaseModel):
     role: Optional[str] = None
 
 class UserResponse(UserBase):
-    user_id: int
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    role: str
+
+    class Config:
+        from_attributes = True
+
+class UserLogin(BaseModel):
+    phone: str
+    password: str
+
+class UserGet(BaseModel):
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    role: str
 
     class Config:
         from_attributes = True

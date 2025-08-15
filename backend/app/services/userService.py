@@ -1,24 +1,18 @@
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.models.user import User
-from app.schemas.userSchema import UserCreate, UserUpdate
-from passlib.context import CryptContext
+from app.schemas.userSchema import UserCreate, UserUpdate,UserGet
+from app.core.auth import get_password_hash
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_user(db: Session, user: UserCreate):
+def create_user(db: Session, user: UserCreate,roleUser:str):
     hashed_password = get_password_hash(user.password)
     db_user = User(
         name=user.name,
         email=user.email,
         phone=user.phone,
         password_hash=hashed_password,
-        role=user.role
+        role=roleUser
     )
     db.add(db_user)
     db.commit()
@@ -32,8 +26,8 @@ def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
 def get_all_users(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(User).offset(skip).limit(limit).all()
-
+    users= db.query(User).offset(skip).limit(limit).all()
+    return users
 def update_user(db: Session, user_id: int, user_update: UserUpdate):
     db_user = get_user_by_id(db, user_id)
     if not db_user:
@@ -57,7 +51,12 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate):
 def delete_user(db: Session, user_id: int):
     db_user = get_user_by_id(db, user_id)
     if not db_user:
-        return None
+        raise HTTPException(status_code=404, detail="User not found")
     db.delete(db_user)
     db.commit()
-    return db_user
+    return {"message": "User deleted successfully"}
+def checkExist(db:Session,phone:str,email:str):
+    user=db.query(User).with_entities(User.phone,User.email).filter((User.phone==phone) or (User.email==email)).first()
+    if user:
+        return True
+    return False
