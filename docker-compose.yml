@@ -39,7 +39,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
     container_name: keycloak
-    command: start --hostname-strict=false --import-realm --http-relative-path=/auth
+    command: start --hostname-strict=false --http-relative-path=/auth --import-realm
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak

@@ -1,6 +1,9 @@
 {
   "realm": "movie",
   "enabled": true,
+  "accessTokenLifespan": 300,
+  "refreshTokenMaxReuse": 0,
+  "sslRequired": "external",
   "roles": {
     "realm": [
       { "name": "admin", "description": "Administrator role" },
@@ -18,13 +21,14 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/+"
       },
       "redirectUris": [
-        "http://localhost/*"
+        "http://localhost:8080/*"
       ],
       "webOrigins": [
-        "http://localhost"
+        "http://localhost:8080"
       ]
     },
     {

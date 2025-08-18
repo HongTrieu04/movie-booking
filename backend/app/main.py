@@ -1,12 +1,15 @@
 from fastapi import FastAPI
-from .routes.user import router as user_router
-from app.db.database import engine, Base
-
-Base.metadata.create_all(bind=engine)  
+from app.routes import user, auth
+from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
-@app.get("/")
-def hello():
-    return {"message": "Welcome to my app"}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # hoặc cụ thể ["http://localhost:8080"]
+    allow_credentials=True,
+    allow_methods=["*"],   # phải có để chấp nhận OPTIONS
+    allow_headers=["*"],
+)
 
-app.include_router(user_router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(user.router, prefix="/api")

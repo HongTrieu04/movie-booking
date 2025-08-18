@@ -22,3 +22,10 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+class RegisterRequest(BaseModel):
+    """Schema dành riêng cho khách hàng đăng ký"""
+    name: str
+    email: EmailStr
+    phone: Optional[str] = None
+    password: str
