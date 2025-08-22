@@ -38,3 +38,12 @@ ALLOW_METHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
 # Thêm các biến bảo mật
 JWT_SECRET=your-jwt-secret-here
 SESSION_SECRET=your-session-secret-here
+
+# API Google
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:8000/auth/login-google
+#GOOGLE_REDIRECT_URI=http://localhost:8000/auth/login-google-callback
+
+REACT_APP_GOOGLE_CLIENT_ID=
+REACT_APP_GOOGLE_REDIRECT_URI=
