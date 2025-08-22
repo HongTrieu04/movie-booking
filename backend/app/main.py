@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import user, auth
+from app.routes import users, auth, contents, movies, promotions, showtimes, tickets
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
@@ -12,4 +12,9 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api")
-app.include_router(user.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(contents.router, prefix="/api")
+app.include_router(movies.router, prefix="/api")
+app.include_router(promotions.router, prefix="/api")
+app.include_router(showtimes.router, prefix="/api")
+app.include_router(tickets.router, prefix="/api")

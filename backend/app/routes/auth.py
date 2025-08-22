@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.schemas.authSchema import LoginRequest, LoginResponse, RegisterRequest, RegisterResponse
-from app.services import auth_local
+from app.services import auth_local, auth_google
 from app.db.database import get_db
 from app.core.security import verify_any_token
 from app.services import user as user_service
 from app.schemas.userSchema import RegisterRequest, UserResponse, UserCreate
-from app.services import user as user_service
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -40,3 +39,8 @@ def get_me(payload: dict = Depends(verify_any_token)):
         "email": payload.get("email"),
         "roles": payload.get("realm_access", {}).get("roles", [])
     }
+
+@router.get("/login-google")
+def login_google(code: str = Query(...), db: Session = Depends(get_db)):
+    """Login Google OAuth2"""
+    return auth_google.login_with_google(db, code)
